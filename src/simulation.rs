@@ -11,6 +11,7 @@ pub struct Simulation {
     pub balls: Vec<Ball>,
 }
 
+#[derive(Clone, Copy)]
 pub struct Ball {
     pub pos: Vec2,
     pub vel: Vec2,
@@ -18,19 +19,16 @@ pub struct Ball {
 
 impl Simulation {
     pub fn new() -> Self {
-        Self {
-            balls: vec![Ball {
-                pos: Vec2::new(225.0, 225.0),
-                vel: Vec2::new(50.0, 0.0),
-            }],
-        }
+        Self { balls: Vec::new() }
     }
 
     pub fn update(&mut self, dt: f32) {
         const G: f32 = 980.0;
         const STEP_SIZE: f32 = 0.000001;
 
-        for ball in self.balls.iter_mut() {
+        let other_balls = self.balls.clone();
+
+        for (i, ball) in self.balls.iter_mut().enumerate() {
             for _ in 0..(dt / STEP_SIZE) as usize {
                 let dt = STEP_SIZE;
 
@@ -60,6 +58,20 @@ impl Simulation {
                 if ball.pos.x <= RADIUS {
                     ball.pos.x = 2.0 * RADIUS - ball.pos.x;
                     ball.vel.x *= -1.0;
+                }
+
+                for (other_i, other_ball) in other_balls.iter().enumerate() {
+                    if i == other_i {
+                        continue;
+                    }
+
+                    let vec = other_ball.pos - ball.pos;
+                    let len = vec.length();
+
+                    if len <= 2.0 * RADIUS {
+                        ball.pos += vec.normalize() * (len / 2.0);
+                        ball.vel = Vec2::ZERO; // ! temporary solution
+                    }
                 }
             }
         }
