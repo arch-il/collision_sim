@@ -20,7 +20,7 @@ impl Simulation {
     pub fn new() -> Self {
         Self {
             balls: vec![Ball {
-                pos: Vec2::new(225.0, 400.0),
+                pos: Vec2::new(225.0, 225.0),
                 vel: Vec2::new(50.0, 0.0),
             }],
         }
@@ -34,10 +34,17 @@ impl Simulation {
             for _ in 0..(dt / STEP_SIZE) as usize {
                 let dt = STEP_SIZE;
 
-                ball.vel.y += G * dt; // ! negative work of gravity not accounted after bounce
+                ball.vel.y += G * dt;
                 ball.pos += ball.vel * dt;
 
                 if ball.pos.y >= RECTANGLE.3 - RADIUS {
+                    // ! too much acceleration is applied over the border
+                    // ? too heavy implementation
+                    // ? try uncomment if energy is depleating
+                    // let extra_y = ball.pos.y - (RECTANGLE.3 - RADIUS);
+                    // let extra_t = extra_y / ball.vel.y;
+                    // ball.vel.y += 2.0 * G * extra_t;
+
                     ball.pos.y = 2.0 * (RECTANGLE.3 - RADIUS) - ball.pos.y;
                     ball.vel.y *= -1.0;
                 }
