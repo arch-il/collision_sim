@@ -1,3 +1,5 @@
+use macroquad::math::Vec2;
+
 use crate::simulation::Simulation;
 
 // const GRAPH_SIZE: usize = 300;
