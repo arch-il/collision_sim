@@ -8,7 +8,7 @@ const RECTANGLE: (f32, f32, f32, f32) = (25.0, 25.0, 450.0, 450.0);
 const RADIUS: f32 = 7.5;
 
 pub struct Simulation {
-    balls: Vec<Ball>,
+    pub balls: Vec<Ball>,
 }
 
 pub struct Ball {
