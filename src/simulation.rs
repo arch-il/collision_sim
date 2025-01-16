@@ -21,7 +21,7 @@ impl Simulation {
         Self {
             balls: vec![Ball {
                 pos: Vec2::new(225.0, 400.0),
-                vel: Vec2::ZERO,
+                vel: Vec2::new(50.0, 0.0),
             }],
         }
     }
@@ -40,6 +40,19 @@ impl Simulation {
                 if ball.pos.y >= RECTANGLE.3 - RADIUS {
                     ball.pos.y = 2.0 * (RECTANGLE.3 - RADIUS) - ball.pos.y;
                     ball.vel.y *= -1.0;
+                }
+                if ball.pos.y <= RADIUS {
+                    ball.pos.y = 2.0 * RADIUS - ball.pos.y;
+                    ball.vel.y *= -1.0;
+                }
+
+                if ball.pos.x >= RECTANGLE.2 - RADIUS {
+                    ball.pos.x = 2.0 * (RECTANGLE.2 - RADIUS) - ball.pos.x;
+                    ball.vel.x *= -1.0;
+                }
+                if ball.pos.x <= RADIUS {
+                    ball.pos.x = 2.0 * RADIUS - ball.pos.x;
+                    ball.vel.x *= -1.0;
                 }
             }
         }
