@@ -26,7 +26,19 @@ impl Simulation {
         }
     }
 
-    pub fn update(&mut self, dt: f32) {}
+    pub fn update(&mut self, dt: f32) {
+        const G: f32 = 980.0;
+
+        for ball in self.balls.iter_mut() {
+            ball.vel.y += G * dt;
+            ball.pos += ball.vel * dt;
+
+            if ball.pos.y >= RECTANGLE.3 - RADIUS {
+                ball.pos.y = 2.0 * (RECTANGLE.3 - RADIUS) - ball.pos.y;
+                ball.vel.y *= -1.0;
+            }
+        }
+    }
 
     pub fn input(&mut self) {}
 
