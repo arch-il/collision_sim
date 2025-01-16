@@ -1,5 +1,6 @@
 use macroquad::{
     color,
+    input::{is_mouse_button_pressed, mouse_position, MouseButton},
     math::Vec2,
     shapes::{draw_circle, draw_rectangle_lines},
 };
@@ -65,19 +66,30 @@ impl Simulation {
                         continue;
                     }
 
-                    let vec = other_ball.pos - ball.pos;
-                    let len = vec.length();
+                    // ! NOT WORKING
+                    // let vec = ball.pos - other_ball.pos;
+                    // let len = vec.length() - 1.0;
 
-                    if len <= 2.0 * RADIUS {
-                        ball.pos += vec.normalize() * (len / 2.0);
-                        ball.vel = Vec2::ZERO; // ! temporary solution
-                    }
+                    // if len <= 2.0 * RADIUS {
+                    //     ball.pos += vec.normalize() * (len / 2.0);
+                    //     ball.vel = Vec2::ZERO; // ! temporary solution
+                    // }
                 }
             }
         }
     }
 
-    pub fn input(&mut self) {}
+    pub fn input(&mut self) {
+        if is_mouse_button_pressed(MouseButton::Left) {
+            self.balls.push(Ball {
+                pos: Vec2::new(
+                    mouse_position().0 - RECTANGLE.0,
+                    mouse_position().1 - RECTANGLE.1,
+                ),
+                vel: Vec2::ZERO,
+            });
+        }
+    }
 
     pub fn draw(&self) {
         draw_rectangle_lines(
