@@ -1,6 +1,11 @@
-use macroquad::{color, math::Vec2, shapes::draw_rectangle_lines};
+use macroquad::{
+    color,
+    math::Vec2,
+    shapes::{draw_circle, draw_rectangle_lines},
+};
 
 const RECTANGLE: (f32, f32, f32, f32) = (25.0, 25.0, 450.0, 450.0);
+const RADIUS: f32 = 7.5;
 
 pub struct Simulation {
     balls: Vec<Ball>,
@@ -13,7 +18,12 @@ pub struct Ball {
 
 impl Simulation {
     pub fn new() -> Self {
-        Self { balls: Vec::new() }
+        Self {
+            balls: vec![Ball {
+                pos: Vec2::new(225.0, 20.0),
+                vel: Vec2::ZERO,
+            }],
+        }
     }
 
     pub fn update(&mut self, dt: f32) {}
@@ -29,5 +39,14 @@ impl Simulation {
             3.0,
             color::WHITE,
         );
+
+        for ball in self.balls.iter() {
+            draw_circle(
+                RECTANGLE.0 + ball.pos.x,
+                RECTANGLE.1 + ball.pos.y,
+                RADIUS,
+                color::LIME,
+            );
+        }
     }
 }
