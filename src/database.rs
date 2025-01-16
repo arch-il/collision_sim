@@ -1,6 +1,5 @@
 use macroquad::{
     color,
-    math::Vec2,
     shapes::{draw_line, draw_rectangle_lines},
     text::draw_text,
     time,

@@ -20,7 +20,7 @@ impl Simulation {
     pub fn new() -> Self {
         Self {
             balls: vec![Ball {
-                pos: Vec2::new(225.0, 20.0),
+                pos: Vec2::new(225.0, 400.0),
                 vel: Vec2::ZERO,
             }],
         }
@@ -28,14 +28,19 @@ impl Simulation {
 
     pub fn update(&mut self, dt: f32) {
         const G: f32 = 980.0;
+        const STEP_SIZE: f32 = 0.000001;
 
         for ball in self.balls.iter_mut() {
-            ball.vel.y += G * dt;
-            ball.pos += ball.vel * dt;
+            for _ in 0..(dt / STEP_SIZE) as usize {
+                let dt = STEP_SIZE;
 
-            if ball.pos.y >= RECTANGLE.3 - RADIUS {
-                ball.pos.y = 2.0 * (RECTANGLE.3 - RADIUS) - ball.pos.y;
-                ball.vel.y *= -1.0;
+                ball.vel.y += G * dt; // ! negative work of gravity not accounted after bounce
+                ball.pos += ball.vel * dt;
+
+                if ball.pos.y >= RECTANGLE.3 - RADIUS {
+                    ball.pos.y = 2.0 * (RECTANGLE.3 - RADIUS) - ball.pos.y;
+                    ball.vel.y *= -1.0;
+                }
             }
         }
     }
