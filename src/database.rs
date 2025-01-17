@@ -117,7 +117,13 @@ impl Database {
             color::PURPLE,
         );
 
-        let energy_scale = 75.0 / self.mechanical_energy[curr_index];
+        // let energy_scale = 75.0 / self.mechanical_energy[curr_index];
+        let energy_scale = 75.0
+            / self
+                .mechanical_energy
+                .iter()
+                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .unwrap();
 
         for i in 0..(GRAPH_SIZE - 1) {
             if i + 1 == self.index {
