@@ -27,7 +27,7 @@ impl Simulation {
         const G: f32 = 980.0;
         const SUB_STEPS: usize = 8;
 
-        let other_balls = self.balls.clone();
+        let mut other_balls = self.balls.clone();
 
         let dt = dt / SUB_STEPS as f32;
         for _ in 0..SUB_STEPS {
@@ -41,7 +41,7 @@ impl Simulation {
                     let len = 2.0 * RADIUS - vec.length();
 
                     if len > 0.0 {
-                        ball.pos += vec.normalize() * (len / 2.0);
+                        ball.pos += vec.normalize() * (len / if i < other_i { 2.0 } else { 1.0 });
                         ball.vel = vec.normalize() * other_ball.vel.length();
                     }
                 }
@@ -73,6 +73,11 @@ impl Simulation {
                     ball.pos.x = 2.0 * RADIUS - ball.pos.x;
                     ball.vel.x *= -1.0;
                 }
+
+                // ! somehow this fixes one problem and produces another
+                // ! balls bounce from stationary balls and energy is stabe
+                // ! but they tend to stick to each other sometimes
+                other_balls[i] = *ball;
             }
         }
     }
