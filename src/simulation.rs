@@ -25,7 +25,6 @@ impl Simulation {
 
     pub fn update(&mut self, dt: f32) {
         const G: f32 = 980.0;
-        // const STEP_SIZE: f32 = 0.000001;
         const SUB_STEPS: usize = 8;
 
         let other_balls = self.balls.clone();
@@ -33,6 +32,20 @@ impl Simulation {
         let dt = dt / SUB_STEPS as f32;
         for _ in 0..SUB_STEPS {
             for (i, ball) in self.balls.iter_mut().enumerate() {
+                for (other_i, other_ball) in other_balls.iter().enumerate() {
+                    if i == other_i {
+                        continue;
+                    }
+
+                    let vec = ball.pos - other_ball.pos;
+                    let len = 2.0 * RADIUS - vec.length();
+
+                    if len > 0.0 {
+                        ball.pos += vec.normalize() * (len / 2.0);
+                        ball.vel = vec.normalize() * other_ball.vel.length();
+                    }
+                }
+
                 ball.vel.y += G * dt;
                 ball.pos += ball.vel * dt;
 
@@ -59,20 +72,6 @@ impl Simulation {
                 if ball.pos.x <= RADIUS {
                     ball.pos.x = 2.0 * RADIUS - ball.pos.x;
                     ball.vel.x *= -1.0;
-                }
-
-                for (other_i, other_ball) in other_balls.iter().enumerate() {
-                    if i == other_i {
-                        continue;
-                    }
-
-                    let vec = ball.pos - other_ball.pos;
-                    let len = 2.0 * RADIUS - vec.length();
-
-                    if len > 0.0 {
-                        ball.pos += vec.normalize() * (len / 2.0);
-                        ball.vel = vec.normalize() * other_ball.vel.length();
-                    }
                 }
             }
         }
