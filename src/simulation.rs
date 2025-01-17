@@ -27,27 +27,30 @@ impl Simulation {
         const G: f32 = 980.0;
         const SUB_STEPS: usize = 8;
 
-        let other_balls = self.balls.clone();
-
         let dt = dt / SUB_STEPS as f32;
+
         for _ in 0..SUB_STEPS {
-            for (i, ball) in self.balls.iter_mut().enumerate() {
-                for (other_i, other_ball) in other_balls.iter().enumerate() {
-                    if i == other_i {
-                        continue;
-                    }
+            for i in 0..self.balls.len() {
+                for j in (i + 1)..self.balls.len() {
+                    let impact = self.balls[i].pos - self.balls[j].pos;
+                    let overlap = 2.0 * RADIUS - impact.length();
+                    if overlap > 0.0 {
+                        let corr = impact.normalize() * (overlap / 2.0);
+                        self.balls[i].pos += corr;
+                        self.balls[j].pos -= corr;
 
-                    let vec = ball.pos - other_ball.pos;
-                    let len = 2.0 * RADIUS - vec.length();
+                        let pos_diff = self.balls[i].pos - self.balls[j].pos;
+                        let vel_diff = self.balls[i].vel - self.balls[j].vel;
+                        let vel_proj =
+                            Vec2::dot(vel_diff, pos_diff) / pos_diff.length_squared() * pos_diff;
 
-                    if len > 0.0 {
-                        // ! account for this if pos is updated
-                        // ball.pos += vec.normalize() * (len / if i < other_i { 2.0 } else { 1.0 });
-                        ball.pos += vec.normalize() * len / 2.0;
-                        ball.vel = vec.normalize() * other_ball.vel.length();
+                        self.balls[i].vel -= vel_proj;
+                        self.balls[j].vel += vel_proj;
                     }
                 }
+            }
 
+            for ball in self.balls.iter_mut() {
                 ball.vel.y += G * dt;
                 ball.pos += ball.vel * dt;
 
@@ -75,11 +78,6 @@ impl Simulation {
                     ball.pos.x = 2.0 * RADIUS - ball.pos.x;
                     ball.vel.x *= -1.0;
                 }
-
-                // ! somehow this fixes one problem and produces another
-                // ! balls bounce from stationary balls and energy is stabe
-                // ! but they tend to stick to each other sometimes
-                // other_balls[i] = *ball;
             }
         }
     }
