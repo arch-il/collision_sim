@@ -12,6 +12,8 @@ const GAP: f32 = 3.0;
 const RECT_THICKNESS: f32 = 3.0;
 
 pub struct Database {
+    ball_count: usize,
+
     kinetic_energy: [f32; GRAPH_SIZE],
     potential_energy: [f32; GRAPH_SIZE],
     mechanical_energy: [f32; GRAPH_SIZE],
@@ -26,6 +28,8 @@ pub struct Database {
 impl Database {
     pub fn new() -> Self {
         Self {
+            ball_count: 0,
+
             kinetic_energy: [0.0; GRAPH_SIZE],
             potential_energy: [0.0; GRAPH_SIZE],
             mechanical_energy: [0.0; GRAPH_SIZE],
@@ -39,6 +43,8 @@ impl Database {
     }
 
     pub fn update(&mut self, simulation: &Simulation, simulation_time: f32) {
+        self.ball_count = simulation.balls.len();
+
         self.kinetic_energy[self.index] = simulation
             .balls
             .iter()
@@ -68,6 +74,7 @@ impl Database {
     pub fn input(&mut self) {}
 
     pub fn draw(&self) {
+        self.draw_info();
         self.draw_energy();
         self.draw_frame_time();
     }
@@ -229,5 +236,15 @@ impl Database {
                 color::LIME,
             );
         }
+    }
+
+    fn draw_info(&self) {
+        draw_text(
+            &format!("balls: {};", self.ball_count,),
+            5.0,
+            12.0,
+            20.0,
+            color::LIGHTGRAY,
+        );
     }
 }
