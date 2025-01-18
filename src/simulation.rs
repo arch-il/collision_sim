@@ -30,7 +30,15 @@ impl Simulation {
         let dt = dt / SUB_STEPS as f32;
 
         for _ in 0..SUB_STEPS {
-            for ball in self.balls.iter_mut() {
+            let rows = (RECTANGLE.3 / (RADIUS + RADIUS)).ceil() as usize;
+            let cols = (RECTANGLE.2 / (RADIUS + RADIUS)).ceil() as usize;
+            let mut grid = vec![vec![vec![]; cols]; rows];
+
+            for (i, ball) in self.balls.iter_mut().enumerate() {
+                grid[(ball.pos.x / (RADIUS + RADIUS)) as usize]
+                    [(ball.pos.y / (RADIUS + RADIUS)) as usize]
+                    .push(i);
+
                 ball.vel.y += G * dt;
                 ball.pos += ball.vel * dt;
 
@@ -83,6 +91,9 @@ impl Simulation {
 
                 self.balls[a].vel -= vel_proj;
                 self.balls[b].vel += vel_proj;
+
+                self.balls[a].vel *= 0.999;
+                self.balls[b].vel *= 0.999;
             }
         }
     }
