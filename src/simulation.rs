@@ -8,6 +8,7 @@ use macroquad::{
 
 const RECTANGLE: (f32, f32, f32, f32) = (25.0, 25.0, 450.0, 450.0);
 const RADIUS: f32 = 2.0;
+const GRID_CELL_SIZE: f32 = 2.0 * RADIUS;
 
 pub struct Simulation {
     pub balls: Vec<Ball>,
@@ -37,9 +38,9 @@ impl Simulation {
         let dt = dt / SUB_STEPS as f32;
 
         for _ in 0..SUB_STEPS {
-            let rows = (RECTANGLE.3 / (RADIUS + RADIUS)).ceil() as usize;
-            let cols = (RECTANGLE.2 / (RADIUS + RADIUS)).ceil() as usize;
-            let mut grid = vec![vec![vec![]; cols]; rows];
+            let grid_rows = (RECTANGLE.3 / GRID_CELL_SIZE).ceil() as usize;
+            let grid_cols = (RECTANGLE.2 / GRID_CELL_SIZE).ceil() as usize;
+            let mut grid = vec![vec![vec![]; grid_cols]; grid_rows];
 
             for (i, ball) in self.balls.iter_mut().enumerate() {
                 ball.vel.y += G * dt;
@@ -70,17 +71,41 @@ impl Simulation {
                     ball.vel.x *= -1.0;
                 }
 
-                grid[(ball.pos.x / (RADIUS + RADIUS)) as usize]
-                    [(ball.pos.y / (RADIUS + RADIUS)) as usize]
+                grid[(ball.pos.x / GRID_CELL_SIZE) as usize]
+                    [(ball.pos.y / GRID_CELL_SIZE) as usize]
                     .push(i);
             }
 
             let mut collisions = Vec::new();
-            for i in 0..self.balls.len() {
-                for j in (i + 1)..self.balls.len() {
-                    let vec = self.balls[i].pos - self.balls[j].pos;
-                    if vec.length_squared() < (2.0 * RADIUS).powi(2) {
-                        collisions.push((i, j));
+            for i in 0..(grid_rows - 1) {
+                for j in 0..(grid_cols - 1) {
+                    let mut ball_ids: Vec<usize> = Vec::new();
+
+                    ball_ids.extend(&grid[i][j]);
+                    ball_ids.extend(&grid[i][j + 1]);
+                    ball_ids.extend(&grid[i + 1][j]);
+                    ball_ids.extend(&grid[i + 1][j + 1]);
+
+                    for i in 0..ball_ids.len() {
+                        for j in (i + 1)..ball_ids.len() {
+                            let vec = self.balls[ball_ids[i]].pos - self.balls[ball_ids[j]].pos;
+                            if vec.length_squared() <= (2.0 * RADIUS).powi(2)
+                                && !collisions.contains(&(ball_ids[i], ball_ids[j]))
+                                && !collisions.contains(&(ball_ids[j], ball_ids[i]))
+                            {
+                                collisions.push((ball_ids[i], ball_ids[j]));
+                            }
+                        }
+                    }
+                }
+            }
+            if collisions.is_empty() {
+                for i in 0..self.balls.len() {
+                    for j in (i + 1)..self.balls.len() {
+                        let vec = self.balls[i].pos - self.balls[j].pos;
+                        if vec.length_squared() < (2.0 * RADIUS).powi(2) {
+                            panic!("Collision was not detected");
+                        }
                     }
                 }
             }
@@ -112,11 +137,13 @@ impl Simulation {
         if self.elapsed_time >= 1.0 / BALLS_PER_SECOND {
             self.elapsed_time -= 1.0 / BALLS_PER_SECOND;
 
-            for i in 0..self.spawner_count {
-                self.balls.push(Ball {
-                    pos: Vec2::new(2.0, 100.0 + 5.0 * i as f32),
-                    vel: Vec2::new(400.0, 0.0),
-                });
+            if time::get_frame_time() < 1.0 / 60.0 {
+                for i in 0..self.spawner_count {
+                    self.balls.push(Ball {
+                        pos: Vec2::new(2.0, 100.0 + 5.0 * i as f32),
+                        vel: Vec2::new(400.0, 0.0),
+                    });
+                }
             }
         }
     }
@@ -142,10 +169,10 @@ impl Simulation {
 
     pub fn draw(&self) {
         draw_rectangle_lines(
-            RECTANGLE.0 - RADIUS,
-            RECTANGLE.1 - RADIUS,
-            RECTANGLE.2 + RADIUS + RADIUS,
-            RECTANGLE.3 + RADIUS + RADIUS,
+            RECTANGLE.0,
+            RECTANGLE.1,
+            RECTANGLE.2,
+            RECTANGLE.3,
             3.0,
             color::WHITE,
         );
