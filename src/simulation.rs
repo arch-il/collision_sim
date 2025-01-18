@@ -30,7 +30,7 @@ impl Simulation {
     }
 
     pub fn update(&mut self, dt: f32) {
-        const SUB_STEPS: usize = 8;
+        const SUB_STEPS: usize = 64;
 
         let dt = dt / SUB_STEPS as f32;
 
@@ -66,7 +66,7 @@ impl Simulation {
 
                             let impact = self.balls[a].pos - self.balls[b].pos;
 
-                            if impact.length() < RADIUS + RADIUS && impact.length() > 1.0 {
+                            if impact.length() < RADIUS + RADIUS {
                                 let overlap = RADIUS + RADIUS - impact.length();
                                 let corr = impact.normalize() * overlap / 2.0;
                                 self.balls[a].pos += corr;
