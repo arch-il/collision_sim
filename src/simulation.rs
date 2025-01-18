@@ -30,26 +30,6 @@ impl Simulation {
         let dt = dt / SUB_STEPS as f32;
 
         for _ in 0..SUB_STEPS {
-            for i in 0..self.balls.len() {
-                for j in (i + 1)..self.balls.len() {
-                    let impact = self.balls[i].pos - self.balls[j].pos;
-                    let overlap = 2.0 * RADIUS - impact.length();
-                    if overlap > 0.0 {
-                        let corr = impact.normalize() * (overlap / 2.0);
-                        self.balls[i].pos += corr;
-                        self.balls[j].pos -= corr;
-
-                        let pos_diff = self.balls[i].pos - self.balls[j].pos;
-                        let vel_diff = self.balls[i].vel - self.balls[j].vel;
-                        let vel_proj =
-                            Vec2::dot(vel_diff, pos_diff) / pos_diff.length_squared() * pos_diff;
-
-                        self.balls[i].vel -= vel_proj;
-                        self.balls[j].vel += vel_proj;
-                    }
-                }
-            }
-
             for ball in self.balls.iter_mut() {
                 ball.vel.y += G * dt;
                 ball.pos += ball.vel * dt;
@@ -78,6 +58,31 @@ impl Simulation {
                     ball.pos.x = 2.0 * RADIUS - ball.pos.x;
                     ball.vel.x *= -1.0;
                 }
+            }
+
+            let mut collisions = Vec::new();
+            for i in 0..self.balls.len() {
+                for j in (i + 1)..self.balls.len() {
+                    let vec = self.balls[i].pos - self.balls[j].pos;
+                    if vec.length_squared() < (2.0 * RADIUS).powi(2) {
+                        collisions.push((i, j));
+                    }
+                }
+            }
+
+            for (a, b) in collisions.into_iter() {
+                let impact = self.balls[a].pos - self.balls[b].pos;
+
+                let corr = impact.normalize() * (RADIUS + RADIUS - impact.length()) / 2.0;
+                self.balls[a].pos += corr;
+                self.balls[b].pos -= corr;
+
+                let pos_diff = self.balls[a].pos - self.balls[b].pos;
+                let vel_diff = self.balls[a].vel - self.balls[b].vel;
+                let vel_proj = Vec2::dot(vel_diff, pos_diff) / pos_diff.length_squared() * pos_diff;
+
+                self.balls[a].vel -= vel_proj;
+                self.balls[b].vel += vel_proj;
             }
         }
     }
