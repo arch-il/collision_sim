@@ -1,3 +1,7 @@
+mod ball_obj;
+
+pub use ball_obj::Ball;
+
 use macroquad::{
     color,
     input::{self, is_mouse_button_pressed, mouse_position, MouseButton},
@@ -16,12 +20,6 @@ pub struct Simulation {
     elapsed_time: f32,
 }
 
-#[derive(Clone, Copy)]
-pub struct Ball {
-    pub pos: Vec2,
-    pub prev_pos: Vec2,
-}
-
 impl Simulation {
     pub fn new() -> Self {
         Self {
@@ -32,7 +30,6 @@ impl Simulation {
     }
 
     pub fn update(&mut self, dt: f32) {
-        const G: f32 = 980.0;
         const SUB_STEPS: usize = 8;
 
         let dt = dt / SUB_STEPS as f32;
@@ -43,27 +40,9 @@ impl Simulation {
             let mut grid = vec![vec![vec![]; grid_cols]; grid_rows];
 
             for (i, ball) in self.balls.iter_mut().enumerate() {
-                const VELOCITY_DAMPING: f32 = 40.0;
-                let last_updated_move = ball.pos - ball.prev_pos;
-                let new_pos = ball.pos
-                    + last_updated_move
-                    + (Vec2::new(0.0, G) - last_updated_move * VELOCITY_DAMPING) * (dt * dt);
-                ball.prev_pos = ball.pos.clone();
-                ball.pos = new_pos.clone();
+                ball.update(dt);
 
-                if ball.pos.y >= RECTANGLE.3 - RADIUS {
-                    ball.pos.y = 2.0 * (RECTANGLE.3 - RADIUS) - ball.pos.y;
-                }
-                if ball.pos.y <= RADIUS {
-                    ball.pos.y = 2.0 * RADIUS - ball.pos.y;
-                }
-
-                if ball.pos.x >= RECTANGLE.2 - RADIUS {
-                    ball.pos.x = 2.0 * (RECTANGLE.2 - RADIUS) - ball.pos.x;
-                }
-                if ball.pos.x <= RADIUS {
-                    ball.pos.x = 2.0 * RADIUS - ball.pos.x;
-                }
+                ball.move_in_bounds(RECTANGLE);
 
                 grid[(ball.pos.x / GRID_CELL_SIZE) as usize]
                     [(ball.pos.y / GRID_CELL_SIZE) as usize]
@@ -125,8 +104,12 @@ impl Simulation {
 
             if time::get_frame_time() < 1.0 / 90.0 {
                 for i in 0..self.spawner_count {
-                    let pos = Vec2::new(2.0, 100.0 + (RADIUS + RADIUS + 1.0) * i as f32);
-                    self.balls.push(Ball { pos, prev_pos: pos });
+                    let pos = Vec2::new(RADIUS, 100.0 + (RADIUS + RADIUS + 1.0) * i as f32);
+                    self.balls.push(Ball {
+                        pos,
+                        prev_pos: pos - Vec2::new(0.4, 0.0),
+                        radius: RADIUS,
+                    });
                 }
             }
         }
@@ -138,7 +121,11 @@ impl Simulation {
                 mouse_position().0 - RECTANGLE.0,
                 mouse_position().1 - RECTANGLE.1,
             );
-            self.balls.push(Ball { pos, prev_pos: pos });
+            self.balls.push(Ball {
+                pos,
+                prev_pos: pos,
+                radius: RADIUS,
+            });
         }
 
         if input::is_key_pressed(input::KeyCode::Left) && self.spawner_count != 0 {
