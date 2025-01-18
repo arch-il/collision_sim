@@ -52,13 +52,6 @@ impl Simulation {
                 ball.pos = new_pos.clone();
 
                 if ball.pos.y >= RECTANGLE.3 - RADIUS {
-                    // ! too much acceleration is applied over the border
-                    // ? too heavy implementation
-                    // ? try uncomment if energy is depleating
-                    // let extra_y = ball.pos.y - (RECTANGLE.3 - RADIUS);
-                    // let extra_t = extra_y / ball.vel.y;
-                    // ball.vel.y += 2.0 * G * extra_t;
-
                     ball.pos.y = 2.0 * (RECTANGLE.3 - RADIUS) - ball.pos.y;
                 }
                 if ball.pos.y <= RADIUS {
