@@ -11,7 +11,7 @@ use macroquad::{
 };
 
 const RECTANGLE: (f32, f32, f32, f32) = (25.0, 25.0, 650.0, 650.0);
-const RADIUS: f32 = 5.0;
+const RADIUS: f32 = 2.5;
 const GRID_CELL_SIZE: f32 = 2.0 * RADIUS;
 
 pub struct Simulation {
@@ -49,7 +49,7 @@ impl Simulation {
                     .push(i);
             }
 
-            let mut collisions = Vec::new();
+            // let mut collisions = Vec::new();
             for i in 0..(grid_rows - 1) {
                 for j in 0..(grid_cols - 1) {
                     let mut ball_ids: Vec<usize> = Vec::new();
@@ -61,36 +61,20 @@ impl Simulation {
 
                     for i in 0..ball_ids.len() {
                         for j in (i + 1)..ball_ids.len() {
-                            let vec = self.balls[ball_ids[i]].pos - self.balls[ball_ids[j]].pos;
-                            if vec.length_squared() <= (2.0 * RADIUS).powi(2) {
-                                collisions.push((ball_ids[i], ball_ids[j]));
+                            let a = ball_ids[i];
+                            let b = ball_ids[j];
+
+                            let impact = self.balls[a].pos - self.balls[b].pos;
+
+                            if impact.length() < RADIUS + RADIUS && impact.length() > 1.0 {
+                                let overlap = RADIUS + RADIUS - impact.length();
+                                let corr = impact.normalize() * overlap / 2.0;
+                                self.balls[a].pos += corr;
+                                self.balls[b].pos -= corr;
                             }
                         }
                     }
                 }
-            }
-            if collisions.is_empty() {
-                for i in 0..self.balls.len() {
-                    for j in (i + 1)..self.balls.len() {
-                        let vec = self.balls[i].pos - self.balls[j].pos;
-                        if vec.length_squared() < (2.0 * RADIUS).powi(2) {
-                            panic!("Collision was not detected");
-                        }
-                    }
-                }
-            }
-
-            for (a, b) in collisions.into_iter() {
-                let impact = self.balls[a].pos - self.balls[b].pos;
-                let len = impact.length();
-
-                if len >= RADIUS + RADIUS {
-                    continue;
-                }
-
-                let corr = impact.normalize() * (RADIUS + RADIUS - len) / 2.0;
-                self.balls[a].pos += corr;
-                self.balls[b].pos -= corr;
             }
         }
     }
