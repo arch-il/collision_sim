@@ -1,8 +1,9 @@
 use macroquad::{
     color,
-    input::{is_mouse_button_pressed, mouse_position, MouseButton},
+    input::{self, is_mouse_button_pressed, mouse_position, MouseButton},
     math::Vec2,
     shapes::{draw_circle, draw_rectangle_lines},
+    time,
 };
 
 const RECTANGLE: (f32, f32, f32, f32) = (25.0, 25.0, 450.0, 450.0);
@@ -10,6 +11,8 @@ const RADIUS: f32 = 2.0;
 
 pub struct Simulation {
     pub balls: Vec<Ball>,
+    pub spawner_count: usize,
+    elapsed_time: f32,
 }
 
 #[derive(Clone, Copy)]
@@ -20,7 +23,11 @@ pub struct Ball {
 
 impl Simulation {
     pub fn new() -> Self {
-        Self { balls: Vec::new() }
+        Self {
+            balls: Vec::new(),
+            spawner_count: 0,
+            elapsed_time: 0.0,
+        }
     }
 
     pub fn update(&mut self, dt: f32) {
@@ -35,10 +42,6 @@ impl Simulation {
             let mut grid = vec![vec![vec![]; cols]; rows];
 
             for (i, ball) in self.balls.iter_mut().enumerate() {
-                grid[(ball.pos.x / (RADIUS + RADIUS)) as usize]
-                    [(ball.pos.y / (RADIUS + RADIUS)) as usize]
-                    .push(i);
-
                 ball.vel.y += G * dt;
                 ball.pos += ball.vel * dt;
 
@@ -66,6 +69,10 @@ impl Simulation {
                     ball.pos.x = 2.0 * RADIUS - ball.pos.x;
                     ball.vel.x *= -1.0;
                 }
+
+                grid[(ball.pos.x / (RADIUS + RADIUS)) as usize]
+                    [(ball.pos.y / (RADIUS + RADIUS)) as usize]
+                    .push(i);
             }
 
             let mut collisions = Vec::new();
@@ -98,6 +105,22 @@ impl Simulation {
         }
     }
 
+    pub fn spawn(&mut self) {
+        const BALLS_PER_SECOND: f32 = 30.0;
+        self.elapsed_time += time::get_frame_time();
+
+        if self.elapsed_time >= 1.0 / BALLS_PER_SECOND {
+            self.elapsed_time -= 1.0 / BALLS_PER_SECOND;
+
+            for i in 0..self.spawner_count {
+                self.balls.push(Ball {
+                    pos: Vec2::new(2.0, 100.0 + 5.0 * i as f32),
+                    vel: Vec2::new(400.0, 0.0),
+                });
+            }
+        }
+    }
+
     pub fn input(&mut self) {
         if is_mouse_button_pressed(MouseButton::Left) {
             self.balls.push(Ball {
@@ -107,6 +130,13 @@ impl Simulation {
                 ),
                 vel: Vec2::ZERO,
             });
+        }
+
+        if input::is_key_pressed(input::KeyCode::Left) && self.spawner_count != 0 {
+            self.spawner_count -= 1;
+        }
+        if input::is_key_pressed(input::KeyCode::Right) {
+            self.spawner_count += 1;
         }
     }
 

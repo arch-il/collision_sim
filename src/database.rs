@@ -13,6 +13,7 @@ const RECT_THICKNESS: f32 = 3.0;
 
 pub struct Database {
     ball_count: usize,
+    spawner_count: usize,
 
     kinetic_energy: [f32; GRAPH_SIZE],
     potential_energy: [f32; GRAPH_SIZE],
@@ -29,6 +30,7 @@ impl Database {
     pub fn new() -> Self {
         Self {
             ball_count: 0,
+            spawner_count: 0,
 
             kinetic_energy: [0.0; GRAPH_SIZE],
             potential_energy: [0.0; GRAPH_SIZE],
@@ -44,6 +46,8 @@ impl Database {
 
     pub fn update(&mut self, simulation: &Simulation, simulation_time: f32) {
         self.ball_count = simulation.balls.len();
+
+        self.spawner_count = simulation.spawner_count;
 
         self.kinetic_energy[self.index] = simulation
             .balls
@@ -240,7 +244,10 @@ impl Database {
 
     fn draw_info(&self) {
         draw_text(
-            &format!("balls: {};", self.ball_count,),
+            &format!(
+                "balls: {}; spawners: {}",
+                self.ball_count, self.spawner_count,
+            ),
             5.0,
             12.0,
             20.0,

@@ -4,8 +4,8 @@ mod simulation;
 use std::time::Instant;
 
 use database::Database;
-use macroquad::{color, input, math::Vec2, time, window};
-use simulation::{Ball, Simulation};
+use macroquad::{color, input, time, window};
+use simulation::Simulation;
 
 fn window_conf() -> window::Conf {
     window::Conf {
@@ -23,7 +23,6 @@ async fn main() {
     let mut simulation = Simulation::new();
     let mut database = Database::new();
 
-    let mut spawn_counter = 0;
     loop {
         window::clear_background(color::BLACK);
 
@@ -33,17 +32,7 @@ async fn main() {
         simulation.input();
         database.input();
 
-        if time::get_frame_time() < 1.0 / 60.0 {
-            spawn_counter += 1;
-            if spawn_counter == 3 {
-                spawn_counter = 0;
-
-                simulation.balls.push(Ball {
-                    pos: Vec2::new(2.0, 100.0),
-                    vel: Vec2::new(400.0, 0.0),
-                });
-            }
-        }
+        simulation.spawn();
 
         let start = Instant::now();
         simulation.update(time::get_frame_time());
