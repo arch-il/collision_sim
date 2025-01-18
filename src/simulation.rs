@@ -59,10 +59,10 @@ impl Simulation {
                     ball_ids.extend(&grid[i + 1][j]);
                     ball_ids.extend(&grid[i + 1][j + 1]);
 
-                    for i in 0..ball_ids.len() {
-                        for j in (i + 1)..ball_ids.len() {
-                            let a = ball_ids[i];
-                            let b = ball_ids[j];
+                    for a in 0..ball_ids.len() {
+                        for b in (a + 1)..ball_ids.len() {
+                            let a = ball_ids[a];
+                            let b = ball_ids[b];
 
                             let impact = self.balls[a].pos - self.balls[b].pos;
 
@@ -71,6 +71,18 @@ impl Simulation {
                                 let corr = impact.normalize() * overlap / 2.0;
                                 self.balls[a].pos += corr;
                                 self.balls[b].pos -= corr;
+
+                                let dir = (self.balls[b].pos - self.balls[a].pos).normalize();
+                                let comp = Vec2::dot(dir, self.balls[a].vel);
+                                if comp > 0.0 {
+                                    self.balls[a].vel -= dir * comp;
+                                }
+
+                                let dir = (self.balls[a].pos - self.balls[b].pos).normalize();
+                                let comp = Vec2::dot(dir, self.balls[b].vel);
+                                if comp > 0.0 {
+                                    self.balls[b].vel -= dir * comp;
+                                }
                             }
                         }
                     }
@@ -86,15 +98,15 @@ impl Simulation {
         if self.elapsed_time >= 1.0 / BALLS_PER_SECOND {
             self.elapsed_time -= 1.0 / BALLS_PER_SECOND;
 
-            // if time::get_frame_time() < 1.0 / 90.0 {
-            for i in 0..self.spawner_count {
-                let pos = Vec2::new(RADIUS, 100.0 + (RADIUS + RADIUS + 1.0) * i as f32);
-                self.balls.push(Ball {
-                    pos,
-                    prev_pos: pos - Vec2::new(0.4, 0.0),
-                });
+            if time::get_frame_time() < 1.0 / 90.0 {
+                for i in 0..self.spawner_count {
+                    let pos = Vec2::new(RADIUS, 100.0 + (3.0 * RADIUS) * i as f32);
+                    self.balls.push(Ball {
+                        pos,
+                        vel: Vec2::new(500.0, 0.0),
+                    });
+                }
             }
-            // }
         }
     }
 
@@ -104,7 +116,10 @@ impl Simulation {
                 mouse_position().0 - RECTANGLE.0,
                 mouse_position().1 - RECTANGLE.1,
             );
-            self.balls.push(Ball { pos, prev_pos: pos });
+            self.balls.push(Ball {
+                pos,
+                vel: Vec2::ZERO,
+            });
         }
 
         if input::is_key_pressed(input::KeyCode::Left) && self.spawner_count != 0 {
