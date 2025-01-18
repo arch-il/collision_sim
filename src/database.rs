@@ -49,12 +49,12 @@ impl Database {
 
         self.spawner_count = simulation.spawner_count;
 
-        self.kinetic_energy[self.index] = simulation
-            .balls
-            .iter()
-            .map(|ball| ball.vel)
-            .fold(0.0, |acc, v| acc + (v.length() / 100.0).powi(2))
-            / 2.0;
+        // self.kinetic_energy[self.index] = simulation
+        //     .balls
+        //     .iter()
+        //     .map(|ball| ball.pos)
+        //     .fold(0.0, |acc, v| acc + (v.length() / 100.0).powi(2))
+        //     / 2.0;
 
         self.potential_energy[self.index] = simulation
             .balls

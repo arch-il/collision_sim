@@ -19,7 +19,7 @@ pub struct Simulation {
 #[derive(Clone, Copy)]
 pub struct Ball {
     pub pos: Vec2,
-    pub vel: Vec2,
+    pub prev_pos: Vec2,
 }
 
 impl Simulation {
@@ -43,8 +43,13 @@ impl Simulation {
             let mut grid = vec![vec![vec![]; grid_cols]; grid_rows];
 
             for (i, ball) in self.balls.iter_mut().enumerate() {
-                ball.vel.y += G * dt;
-                ball.pos += ball.vel * dt;
+                const VELOCITY_DAMPING: f32 = 40.0;
+                let last_updated_move = ball.pos - ball.prev_pos;
+                let new_pos = ball.pos
+                    + last_updated_move
+                    + (Vec2::new(0.0, G) - last_updated_move * VELOCITY_DAMPING) * (dt * dt);
+                ball.prev_pos = ball.pos.clone();
+                ball.pos = new_pos.clone();
 
                 if ball.pos.y >= RECTANGLE.3 - RADIUS {
                     // ! too much acceleration is applied over the border
@@ -55,20 +60,16 @@ impl Simulation {
                     // ball.vel.y += 2.0 * G * extra_t;
 
                     ball.pos.y = 2.0 * (RECTANGLE.3 - RADIUS) - ball.pos.y;
-                    ball.vel.y *= -1.0;
                 }
                 if ball.pos.y <= RADIUS {
                     ball.pos.y = 2.0 * RADIUS - ball.pos.y;
-                    ball.vel.y *= -1.0;
                 }
 
                 if ball.pos.x >= RECTANGLE.2 - RADIUS {
                     ball.pos.x = 2.0 * (RECTANGLE.2 - RADIUS) - ball.pos.x;
-                    ball.vel.x *= -1.0;
                 }
                 if ball.pos.x <= RADIUS {
                     ball.pos.x = 2.0 * RADIUS - ball.pos.x;
-                    ball.vel.x *= -1.0;
                 }
 
                 grid[(ball.pos.x / GRID_CELL_SIZE) as usize]
@@ -76,61 +77,48 @@ impl Simulation {
                     .push(i);
             }
 
-            for _ in 0..2 {
-                let mut collisions = Vec::new();
-                for i in 0..(grid_rows - 1) {
-                    for j in 0..(grid_cols - 1) {
-                        let mut ball_ids: Vec<usize> = Vec::new();
+            let mut collisions = Vec::new();
+            for i in 0..(grid_rows - 1) {
+                for j in 0..(grid_cols - 1) {
+                    let mut ball_ids: Vec<usize> = Vec::new();
 
-                        ball_ids.extend(&grid[i][j]);
-                        ball_ids.extend(&grid[i][j + 1]);
-                        ball_ids.extend(&grid[i + 1][j]);
-                        ball_ids.extend(&grid[i + 1][j + 1]);
+                    ball_ids.extend(&grid[i][j]);
+                    ball_ids.extend(&grid[i][j + 1]);
+                    ball_ids.extend(&grid[i + 1][j]);
+                    ball_ids.extend(&grid[i + 1][j + 1]);
 
-                        for i in 0..ball_ids.len() {
-                            for j in (i + 1)..ball_ids.len() {
-                                let vec = self.balls[ball_ids[i]].pos - self.balls[ball_ids[j]].pos;
-                                if vec.length_squared() <= (2.0 * RADIUS).powi(2) {
-                                    collisions.push((ball_ids[i], ball_ids[j]));
-                                }
+                    for i in 0..ball_ids.len() {
+                        for j in (i + 1)..ball_ids.len() {
+                            let vec = self.balls[ball_ids[i]].pos - self.balls[ball_ids[j]].pos;
+                            if vec.length_squared() <= (2.0 * RADIUS).powi(2) {
+                                collisions.push((ball_ids[i], ball_ids[j]));
                             }
                         }
                     }
                 }
-                if collisions.is_empty() {
-                    for i in 0..self.balls.len() {
-                        for j in (i + 1)..self.balls.len() {
-                            let vec = self.balls[i].pos - self.balls[j].pos;
-                            if vec.length_squared() < (2.0 * RADIUS).powi(2) {
-                                panic!("Collision was not detected");
-                            }
+            }
+            if collisions.is_empty() {
+                for i in 0..self.balls.len() {
+                    for j in (i + 1)..self.balls.len() {
+                        let vec = self.balls[i].pos - self.balls[j].pos;
+                        if vec.length_squared() < (2.0 * RADIUS).powi(2) {
+                            panic!("Collision was not detected");
                         }
                     }
                 }
+            }
 
-                for (a, b) in collisions.into_iter() {
-                    let impact = self.balls[a].pos - self.balls[b].pos;
-                    let len = impact.length();
+            for (a, b) in collisions.into_iter() {
+                let impact = self.balls[a].pos - self.balls[b].pos;
+                let len = impact.length();
 
-                    if len >= RADIUS + RADIUS {
-                        continue;
-                    }
-
-                    let corr = impact.normalize() * (RADIUS + RADIUS - len) / 2.0;
-                    self.balls[a].pos += corr;
-                    self.balls[b].pos -= corr;
-
-                    let pos_diff = self.balls[a].pos - self.balls[b].pos;
-                    let vel_diff = self.balls[a].vel - self.balls[b].vel;
-                    let vel_proj =
-                        Vec2::dot(vel_diff, pos_diff) / pos_diff.length_squared() * pos_diff;
-
-                    self.balls[a].vel -= vel_proj;
-                    self.balls[b].vel += vel_proj;
-
-                    self.balls[a].vel *= 0.99;
-                    self.balls[b].vel *= 0.99;
+                if len >= RADIUS + RADIUS {
+                    continue;
                 }
+
+                let corr = impact.normalize() * (RADIUS + RADIUS - len) / 2.0;
+                self.balls[a].pos += corr;
+                self.balls[b].pos -= corr;
             }
         }
     }
@@ -144,10 +132,8 @@ impl Simulation {
 
             if time::get_frame_time() < 1.0 / 90.0 {
                 for i in 0..self.spawner_count {
-                    self.balls.push(Ball {
-                        pos: Vec2::new(2.0, 100.0 + (RADIUS + RADIUS + 1.0) * i as f32),
-                        vel: Vec2::new(600.0, 0.0),
-                    });
+                    let pos = Vec2::new(2.0, 100.0 + (RADIUS + RADIUS + 1.0) * i as f32);
+                    self.balls.push(Ball { pos, prev_pos: pos });
                 }
             }
         }
@@ -155,13 +141,11 @@ impl Simulation {
 
     pub fn input(&mut self) {
         if is_mouse_button_pressed(MouseButton::Left) {
-            self.balls.push(Ball {
-                pos: Vec2::new(
-                    mouse_position().0 - RECTANGLE.0,
-                    mouse_position().1 - RECTANGLE.1,
-                ),
-                vel: Vec2::ZERO,
-            });
+            let pos = Vec2::new(
+                mouse_position().0 - RECTANGLE.0,
+                mouse_position().1 - RECTANGLE.1,
+            );
+            self.balls.push(Ball { pos, prev_pos: pos });
         }
 
         if input::is_key_pressed(input::KeyCode::Left) && self.spawner_count != 0 {
