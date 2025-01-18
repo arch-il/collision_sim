@@ -11,9 +11,14 @@ fn window_conf() -> window::Conf {
     window::Conf {
         window_title: "Collision Sim".to_owned(),
         window_resizable: false,
-        window_width: 806,
-        window_height: 500,
-        high_dpi: false,
+
+        // window_width: 806,
+        // window_height: 500,
+        // high_dpi: false,
+        window_width: 1612,
+        window_height: 1000,
+        high_dpi: true,
+
         ..Default::default()
     }
 }

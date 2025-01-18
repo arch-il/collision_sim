@@ -89,10 +89,7 @@ impl Simulation {
                     for i in 0..ball_ids.len() {
                         for j in (i + 1)..ball_ids.len() {
                             let vec = self.balls[ball_ids[i]].pos - self.balls[ball_ids[j]].pos;
-                            if vec.length_squared() <= (2.0 * RADIUS).powi(2)
-                                && !collisions.contains(&(ball_ids[i], ball_ids[j]))
-                                && !collisions.contains(&(ball_ids[j], ball_ids[i]))
-                            {
+                            if vec.length_squared() <= (2.0 * RADIUS).powi(2) {
                                 collisions.push((ball_ids[i], ball_ids[j]));
                             }
                         }
@@ -112,8 +109,13 @@ impl Simulation {
 
             for (a, b) in collisions.into_iter() {
                 let impact = self.balls[a].pos - self.balls[b].pos;
+                let len = impact.length();
 
-                let corr = impact.normalize() * (RADIUS + RADIUS - impact.length()) / 2.0;
+                if len >= RADIUS + RADIUS {
+                    continue;
+                }
+
+                let corr = impact.normalize() * (RADIUS + RADIUS - len) / 2.0;
                 self.balls[a].pos += corr;
                 self.balls[b].pos -= corr;
 
