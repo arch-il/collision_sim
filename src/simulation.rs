@@ -2,6 +2,7 @@ mod ball_obj;
 
 pub use ball_obj::Ball;
 
+use ball_obj::RADIUS;
 use macroquad::{
     color,
     input::{self, is_mouse_button_pressed, mouse_position, MouseButton},
@@ -11,7 +12,6 @@ use macroquad::{
 };
 
 const RECTANGLE: (f32, f32, f32, f32) = (25.0, 25.0, 650.0, 650.0);
-const RADIUS: f32 = 2.5;
 const GRID_CELL_SIZE: f32 = 2.0 * RADIUS;
 
 pub struct Simulation {
@@ -24,7 +24,7 @@ impl Simulation {
     pub fn new() -> Self {
         Self {
             balls: Vec::new(),
-            spawner_count: 0,
+            spawner_count: 1,
             elapsed_time: 0.0,
         }
     }
@@ -86,16 +86,15 @@ impl Simulation {
         if self.elapsed_time >= 1.0 / BALLS_PER_SECOND {
             self.elapsed_time -= 1.0 / BALLS_PER_SECOND;
 
-            if time::get_frame_time() < 1.0 / 90.0 {
-                for i in 0..self.spawner_count {
-                    let pos = Vec2::new(RADIUS, 100.0 + (RADIUS + RADIUS + 1.0) * i as f32);
-                    self.balls.push(Ball {
-                        pos,
-                        prev_pos: pos - Vec2::new(0.4, 0.0),
-                        radius: RADIUS,
-                    });
-                }
+            // if time::get_frame_time() < 1.0 / 90.0 {
+            for i in 0..self.spawner_count {
+                let pos = Vec2::new(RADIUS, 100.0 + (RADIUS + RADIUS + 1.0) * i as f32);
+                self.balls.push(Ball {
+                    pos,
+                    prev_pos: pos - Vec2::new(0.4, 0.0),
+                });
             }
+            // }
         }
     }
 
@@ -105,11 +104,7 @@ impl Simulation {
                 mouse_position().0 - RECTANGLE.0,
                 mouse_position().1 - RECTANGLE.1,
             );
-            self.balls.push(Ball {
-                pos,
-                prev_pos: pos,
-                radius: RADIUS,
-            });
+            self.balls.push(Ball { pos, prev_pos: pos });
         }
 
         if input::is_key_pressed(input::KeyCode::Left) && self.spawner_count != 0 {

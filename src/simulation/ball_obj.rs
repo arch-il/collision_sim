@@ -1,10 +1,11 @@
 use macroquad::math::Vec2;
 
+pub const RADIUS: f32 = 2.5;
+
 #[derive(Clone, Copy)]
 pub struct Ball {
     pub pos: Vec2,
     pub prev_pos: Vec2,
-    pub radius: f32,
 }
 
 impl Ball {
@@ -27,18 +28,18 @@ impl Ball {
     }
 
     pub fn move_in_bounds(&mut self, rectangle: (f32, f32, f32, f32)) {
-        if self.pos.y >= rectangle.3 - self.radius {
-            self.pos.y = 2.0 * (rectangle.3 - self.radius) - self.pos.y;
+        if self.pos.y >= rectangle.3 - RADIUS {
+            self.pos.y = 2.0 * (rectangle.3 - RADIUS) - self.pos.y;
         }
-        if self.pos.y <= self.radius {
-            self.pos.y = 2.0 * self.radius - self.pos.y;
+        if self.pos.y <= RADIUS {
+            self.pos.y = 2.0 * RADIUS - self.pos.y;
         }
 
-        if self.pos.x >= rectangle.2 - self.radius {
-            self.pos.x = 2.0 * (rectangle.2 - self.radius) - self.pos.x;
+        if self.pos.x >= rectangle.2 - RADIUS {
+            self.pos.x = 2.0 * (rectangle.2 - RADIUS) - self.pos.x;
         }
-        if self.pos.x <= self.radius {
-            self.pos.x = 2.0 * self.radius - self.pos.x;
+        if self.pos.x <= RADIUS {
+            self.pos.x = 2.0 * RADIUS - self.pos.x;
         }
     }
 }
