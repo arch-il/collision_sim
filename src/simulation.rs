@@ -30,7 +30,7 @@ impl Simulation {
     }
 
     pub fn update(&mut self, dt: f32) {
-        const SUB_STEPS: usize = 64;
+        const SUB_STEPS: usize = 8;
 
         let dt = dt / SUB_STEPS as f32;
 
