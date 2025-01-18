@@ -6,7 +6,7 @@ use macroquad::{
 };
 
 const RECTANGLE: (f32, f32, f32, f32) = (25.0, 25.0, 450.0, 450.0);
-const RADIUS: f32 = 7.5;
+const RADIUS: f32 = 2.0;
 
 pub struct Simulation {
     pub balls: Vec<Ball>,
