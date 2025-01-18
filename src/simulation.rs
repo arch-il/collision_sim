@@ -92,8 +92,8 @@ impl Simulation {
                 self.balls[a].vel -= vel_proj;
                 self.balls[b].vel += vel_proj;
 
-                self.balls[a].vel *= 0.999;
-                self.balls[b].vel *= 0.999;
+                self.balls[a].vel *= 0.99;
+                self.balls[b].vel *= 0.99;
             }
         }
     }
@@ -112,10 +112,10 @@ impl Simulation {
 
     pub fn draw(&self) {
         draw_rectangle_lines(
-            RECTANGLE.0,
-            RECTANGLE.1,
-            RECTANGLE.2,
-            RECTANGLE.3,
+            RECTANGLE.0 - RADIUS,
+            RECTANGLE.1 - RADIUS,
+            RECTANGLE.2 + RADIUS + RADIUS,
+            RECTANGLE.3 + RADIUS + RADIUS,
             3.0,
             color::WHITE,
         );

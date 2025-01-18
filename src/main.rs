@@ -33,7 +33,7 @@ async fn main() {
         simulation.input();
         database.input();
 
-        if time::get_frame_time() < 0.017 {
+        if time::get_frame_time() < 1.0 / 60.0 {
             spawn_counter += 1;
             if spawn_counter == 3 {
                 spawn_counter = 0;
