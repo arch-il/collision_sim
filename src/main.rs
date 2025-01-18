@@ -8,17 +8,17 @@ use macroquad::{color, input, time, window};
 use simulation::Simulation;
 
 fn window_conf() -> window::Conf {
+    const WINDOW_SIZE: (i32, i32) = (1006, 700);
     window::Conf {
         window_title: "Collision Sim".to_owned(),
         window_resizable: false,
 
-        // window_width: 806,
-        // window_height: 500,
+        // window_width: WINDOW_SIZE.0,
+        // window_height: WINDOW_SIZE.1,
         // high_dpi: false,
-        window_width: 1612,
-        window_height: 1000,
+        window_width: 2 * WINDOW_SIZE.0,
+        window_height: 2 * WINDOW_SIZE.1,
         high_dpi: true,
-
         ..Default::default()
     }
 }

@@ -60,7 +60,7 @@ impl Database {
             .balls
             .iter()
             .map(|ball| ball.pos)
-            .fold(0.0, |acc, p| acc + (450.0 - p.y) / 100.0 * 9.8);
+            .fold(0.0, |acc, p| acc + (650.0 - p.y) / 100.0 * 9.8);
 
         self.mechanical_energy[self.index] =
             self.kinetic_energy[self.index] + self.potential_energy[self.index];
@@ -92,7 +92,7 @@ impl Database {
 
         const ID: i32 = 0;
         const TITLE_RECT: (f32, f32, f32, f32) = (
-            500.0 + GAP,
+            700.0 + GAP,
             125.0 * ID as f32 + GAP * (2 * ID + 1) as f32,
             GRAPH_SIZE as f32,
             25.0,
@@ -114,7 +114,7 @@ impl Database {
         );
 
         const RECT: (f32, f32, f32, f32) = (
-            500.0 + GAP,
+            700.0 + GAP,
             125.0 * ID as f32 + GAP * (2 * ID + 2) as f32 + 25.0,
             GRAPH_SIZE as f32,
             100.0,
@@ -171,7 +171,7 @@ impl Database {
     fn draw_frame_time(&self) {
         const ID: i32 = 1;
         const TITLE_RECT: (f32, f32, f32, f32) = (
-            500.0 + GAP,
+            700.0 + GAP,
             125.0 * ID as f32 + GAP * (2 * ID + 1) as f32,
             GRAPH_SIZE as f32,
             25.0,
@@ -196,7 +196,7 @@ impl Database {
         );
 
         const RECT: (f32, f32, f32, f32) = (
-            500.0 + GAP,
+            700.0 + GAP,
             125.0 * ID as f32 + GAP * (2 * ID + 2) as f32 + 25.0,
             GRAPH_SIZE as f32,
             100.0,
