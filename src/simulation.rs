@@ -37,26 +37,26 @@ impl Simulation {
         for _ in 0..SUB_STEPS {
             let grid_rows = (RECTANGLE.3 / GRID_CELL_SIZE).ceil() as usize;
             let grid_cols = (RECTANGLE.2 / GRID_CELL_SIZE).ceil() as usize;
-            let mut grid = vec![vec![vec![]; grid_cols]; grid_rows];
+            let mut grid = vec![vec![]; grid_cols * grid_rows];
 
             for (i, ball) in self.balls.iter_mut().enumerate() {
                 ball.update(dt);
 
                 ball.move_in_bounds(RECTANGLE);
 
-                grid[(ball.pos.x / GRID_CELL_SIZE) as usize]
-                    [(ball.pos.y / GRID_CELL_SIZE) as usize]
-                    .push(i);
+                let grid_x = (ball.pos.x / GRID_CELL_SIZE) as usize;
+                let grid_y = (ball.pos.y / GRID_CELL_SIZE) as usize;
+                grid[grid_y * grid_cols + grid_x].push(i);
             }
 
             for i in 0..(grid_rows - 1) {
                 for j in 0..(grid_cols - 1) {
                     let mut ball_ids: Vec<usize> = Vec::new();
 
-                    ball_ids.extend(&grid[i][j]);
-                    ball_ids.extend(&grid[i][j + 1]);
-                    ball_ids.extend(&grid[i + 1][j]);
-                    ball_ids.extend(&grid[i + 1][j + 1]);
+                    ball_ids.extend(&grid[j * grid_cols + i]);
+                    ball_ids.extend(&grid[j * grid_cols + i + 1]);
+                    ball_ids.extend(&grid[(j + 1) * grid_cols + i]);
+                    ball_ids.extend(&grid[(j + 1) * grid_cols + i + 1]);
 
                     Simulation::check_each_combo(&mut self.balls, &ball_ids);
                 }
