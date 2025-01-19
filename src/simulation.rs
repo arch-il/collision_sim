@@ -58,37 +58,48 @@ impl Simulation {
                     ball_ids.extend(&grid[i + 1][j]);
                     ball_ids.extend(&grid[i + 1][j + 1]);
 
-                    for a in 0..ball_ids.len() {
-                        for b in (a + 1)..ball_ids.len() {
-                            let a = ball_ids[a];
-                            let b = ball_ids[b];
-
-                            let impact = self.balls[a].pos - self.balls[b].pos;
-
-                            let len_sqr = impact.length_squared();
-                            if len_sqr < (RADIUS + RADIUS) * (RADIUS + RADIUS) {
-                                let dir = impact.normalize();
-
-                                let len = len_sqr.sqrt();
-                                let overlap = RADIUS + RADIUS - len;
-                                let corr = dir * overlap / 2.0;
-                                self.balls[a].pos += corr;
-                                self.balls[b].pos -= corr;
-
-                                let comp = Vec2::dot(dir, self.balls[b].vel);
-                                if comp > 0.0 {
-                                    self.balls[b].vel -= dir * comp;
-                                }
-
-                                let dir = dir * -1.0;
-                                let comp = Vec2::dot(dir, self.balls[a].vel);
-                                if comp > 0.0 {
-                                    self.balls[a].vel -= dir * comp;
-                                }
-                            }
-                        }
-                    }
+                    Simulation::check_each_combo(&mut self.balls, &ball_ids);
                 }
+            }
+        }
+    }
+
+    fn check_each_combo(balls: &mut Vec<Ball>, ball_ids: &Vec<usize>) {
+        for a in 0..ball_ids.len() {
+            for b in (a + 1)..ball_ids.len() {
+                let (a, b) = if ball_ids[a] < ball_ids[b] {
+                    (ball_ids[a], ball_ids[b])
+                } else {
+                    (ball_ids[b], ball_ids[a])
+                };
+                let (left, right) = balls.split_at_mut(b);
+                Simulation::solve_collision(&mut left[a], &mut right[0]);
+            }
+        }
+    }
+
+    fn solve_collision(a: &mut Ball, b: &mut Ball) {
+        let impact = a.pos - b.pos;
+
+        let len_sqr = impact.length_squared();
+        if len_sqr < (RADIUS + RADIUS) * (RADIUS + RADIUS) {
+            let dir = impact.normalize();
+
+            let len = len_sqr.sqrt();
+            let overlap = RADIUS + RADIUS - len;
+            let corr = dir * overlap / 2.0;
+            a.pos += corr;
+            b.pos -= corr;
+
+            let comp = Vec2::dot(dir, b.vel);
+            if comp > 0.0 {
+                b.vel -= dir * comp;
+            }
+
+            let dir = dir * -1.0;
+            let comp = Vec2::dot(dir, a.vel);
+            if comp > 0.0 {
+                a.vel -= dir * comp;
             }
         }
     }
