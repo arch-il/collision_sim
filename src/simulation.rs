@@ -49,7 +49,6 @@ impl Simulation {
                     .push(i);
             }
 
-            // let mut collisions = Vec::new();
             for i in 0..(grid_rows - 1) {
                 for j in 0..(grid_cols - 1) {
                     let mut ball_ids: Vec<usize> = Vec::new();
@@ -66,22 +65,25 @@ impl Simulation {
 
                             let impact = self.balls[a].pos - self.balls[b].pos;
 
-                            if impact.length() < RADIUS + RADIUS {
-                                let overlap = RADIUS + RADIUS - impact.length();
-                                let corr = impact.normalize() * overlap / 2.0;
+                            let len_sqr = impact.length_squared();
+                            if len_sqr < (RADIUS + RADIUS) * (RADIUS + RADIUS) {
+                                let dir = impact.normalize();
+
+                                let len = len_sqr.sqrt();
+                                let overlap = RADIUS + RADIUS - len;
+                                let corr = dir * overlap / 2.0;
                                 self.balls[a].pos += corr;
                                 self.balls[b].pos -= corr;
 
-                                let dir = (self.balls[b].pos - self.balls[a].pos).normalize();
-                                let comp = Vec2::dot(dir, self.balls[a].vel);
-                                if comp > 0.0 {
-                                    self.balls[a].vel -= dir * comp;
-                                }
-
-                                let dir = (self.balls[a].pos - self.balls[b].pos).normalize();
                                 let comp = Vec2::dot(dir, self.balls[b].vel);
                                 if comp > 0.0 {
                                     self.balls[b].vel -= dir * comp;
+                                }
+
+                                let dir = dir * -1.0;
+                                let comp = Vec2::dot(dir, self.balls[a].vel);
+                                if comp > 0.0 {
+                                    self.balls[a].vel -= dir * comp;
                                 }
                             }
                         }
@@ -98,7 +100,7 @@ impl Simulation {
         if self.elapsed_time >= 1.0 / BALLS_PER_SECOND {
             self.elapsed_time -= 1.0 / BALLS_PER_SECOND;
 
-            if time::get_frame_time() < 1.0 / 90.0 {
+            if time::get_frame_time() < 0.012 {
                 for i in 0..self.spawner_count {
                     let pos = Vec2::new(RADIUS, 100.0 + (3.0 * RADIUS) * i as f32);
                     self.balls.push(Ball {
