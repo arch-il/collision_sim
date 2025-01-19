@@ -1,5 +1,10 @@
 mod ball_obj;
 
+use std::{
+    sync::{Arc, Mutex},
+    thread,
+};
+
 pub use ball_obj::Ball;
 
 use ball_obj::RADIUS;
@@ -49,22 +54,79 @@ impl Simulation {
                 grid[grid_y * grid_cols + grid_x].push(i);
             }
 
-            for i in 0..(grid_rows - 1) {
-                for j in 0..(grid_cols - 1) {
-                    let mut ball_ids: Vec<usize> = Vec::new();
-
-                    ball_ids.extend(&grid[j * grid_cols + i]);
-                    ball_ids.extend(&grid[j * grid_cols + i + 1]);
-                    ball_ids.extend(&grid[(j + 1) * grid_cols + i]);
-                    ball_ids.extend(&grid[(j + 1) * grid_cols + i + 1]);
-
-                    Simulation::check_each_combo(&mut self.balls, &ball_ids);
-                }
-            }
+            Simulation::multithread_check(&mut self.balls, &grid, grid_rows, grid_cols);
         }
     }
 
-    fn check_each_combo(balls: &mut Vec<Ball>, ball_ids: &Vec<usize>) {
+    fn multithread_check(
+        balls: &mut [Ball],
+        grid: &[Vec<usize>],
+        grid_rows: usize,
+        grid_cols: usize,
+    ) {
+        const THREAD_COUNT: usize = 8;
+
+        let arc_grid = Arc::new(grid.to_vec());
+        let arc_balls = Arc::new(Mutex::new(balls.to_vec()));
+
+        // let slice_size = grid_rows / THREAD_COUNT;
+        let slice_size = (grid_rows as f32 / THREAD_COUNT as f32).ceil() as usize;
+
+        let handles = (0..THREAD_COUNT)
+            .map(|slice_id| {
+                let grid_clone = Arc::clone(&arc_grid);
+                let balls_clone = Arc::clone(&arc_balls);
+                thread::spawn(move || {
+                    let from = slice_size * slice_id;
+                    let to = usize::min(grid_rows - 1, slice_size * (slice_id + 1));
+
+                    for i in from..to {
+                        for j in 0..(grid_cols - 1) {
+                            let mut ball_ids: Vec<usize> = Vec::new();
+
+                            ball_ids.extend(&grid_clone[j * grid_cols + i]);
+                            ball_ids.extend(&grid_clone[j * grid_cols + i + 1]);
+                            ball_ids.extend(&grid_clone[(j + 1) * grid_cols + i]);
+                            ball_ids.extend(&grid_clone[(j + 1) * grid_cols + i + 1]);
+
+                            if let Ok(mut balls_lock) = balls_clone.lock() {
+                                Simulation::check_each_combo(&mut *balls_lock, &ball_ids);
+                            }
+                        }
+                    }
+                })
+            })
+            .collect::<Vec<_>>();
+
+        for handle in handles {
+            if let Err(e) = handle.join() {
+                eprint!("Thread panicked : {:?}", e);
+            }
+        }
+
+        if let Ok(balls_lock) = Arc::try_unwrap(arc_balls)
+            .expect("Failed to unwrap Arc")
+            .into_inner()
+        {
+            balls.copy_from_slice(&balls_lock);
+        }
+
+        // SINGLE THREADED SOLUTION
+        // for i in 0..(grid_rows - 1) {
+        //     for j in 0..(grid_cols - 1) {
+        //         let mut ball_ids: Vec<usize> = Vec::new();
+
+        //         ball_ids.extend(&grid[j * grid_cols + i]);
+        //         ball_ids.extend(&grid[j * grid_cols + i + 1]);
+        //         ball_ids.extend(&grid[(j + 1) * grid_cols + i]);
+        //         ball_ids.extend(&grid[(j + 1) * grid_cols + i + 1]);
+
+        //         Simulation::check_each_combo(balls, &ball_ids);
+        //     }
+        // }
+    }
+
+    fn check_each_combo(balls: &mut [Ball], ball_ids: &[usize]) {
         for a in 0..ball_ids.len() {
             for b in (a + 1)..ball_ids.len() {
                 let (a, b) = if ball_ids[a] < ball_ids[b] {

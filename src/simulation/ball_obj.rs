@@ -2,7 +2,7 @@ use macroquad::math::Vec2;
 
 pub const RADIUS: f32 = 2.5;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Ball {
     pub pos: Vec2,
     pub vel: Vec2,
